@@ -1,0 +1,26 @@
+# Secrets / environment files
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Dependencies and generated files
+node_modules/
+backend/.venv/
+.venv/
+venv/
+dist/
+build/
+__pycache__/
+*.py[cod]
+*.sqlite
+*.sqlite3
+*.db
+
+# Tooling / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

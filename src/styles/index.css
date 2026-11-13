@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#F2F5F3] text-[#12201C] font-sans antialiased;
+    color: #12201C;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F2F5F3;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Text Highlight Styles for Brand Audit */
+.highlight-finding-critical {
+  background-color: rgba(194, 65, 59, 0.15);
+  border-bottom: 2px solid #C2413B;
+  padding: 0 3px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.highlight-finding-critical:hover {
+  background-color: rgba(194, 65, 59, 0.28);
+}
+
+.highlight-finding-warning {
+  background-color: rgba(180, 83, 9, 0.15);
+  border-bottom: 2px solid #B45309;
+  padding: 0 3px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.highlight-finding-warning:hover {
+  background-color: rgba(180, 83, 9, 0.28);
+}
+
+.highlight-finding-suggestion {
+  background-color: rgba(10, 74, 61, 0.12);
+  border-bottom: 2px solid #0A4A3D;
+  padding: 0 3px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.highlight-finding-suggestion:hover {
+  background-color: rgba(10, 74, 61, 0.25);
+}
