@@ -50,6 +50,8 @@
   host.id = 'plumbline-host';
   document.documentElement.appendChild(host);
   const shadow = host.attachShadow({ mode: 'open' });
+  // keep typing in our panel from triggering the site's keyboard shortcuts
+  ['keydown', 'keyup', 'keypress'].forEach(t => host.addEventListener(t, e => e.stopPropagation()));
   shadow.innerHTML = `
     <style>
       :host{all:initial}
@@ -71,6 +73,7 @@
       q{display:block;background:#f9fafb;border-left:3px solid #d1d5db;padding:4px 8px;margin:6px 0;font-style:italic}
       .src{font-size:11px;color:#6b7280;margin-top:4px}
       .row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+      textarea.edt{width:100%;min-height:52px;box-sizing:border-box;margin-top:6px;border:1px solid #d1d5db;border-radius:8px;padding:6px;font:inherit;font-size:12px;resize:vertical}
       button.b{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
       button.p{background:#111827;color:#fff;border-color:#111827}
       details{margin-top:10px;font-size:12px;color:#374151} summary{cursor:pointer;font-weight:600}
@@ -96,9 +99,10 @@
     pill.style.left = `${Math.max(4, Math.min(window.innerWidth - 150, r.right - 146))}px`;
   }
 
+  const ours = e => e.composedPath?.().includes(host);
   document.addEventListener('focusin', e => {
     const el = e.composedPath?.()[0] || e.target;
-    if (!isEditable(el)) return;
+    if (ours(e) || !isEditable(el)) return;
     target = rootEditable(el);
     placePill(target);
   }, true);
@@ -116,7 +120,7 @@
   }
   document.addEventListener('input', e => {
     const el = e.composedPath?.()[0] || e.target;
-    if (!isEditable(el)) return;
+    if (ours(e) || !isEditable(el)) return;
     target = rootEditable(el);
     placePill(target);
     clearTimeout(rulesTimer); clearTimeout(aiTimer);
@@ -168,7 +172,9 @@
         ${f.affectedContent ? `<q>${esc(f.affectedContent)}</q>` : ''}
         ${f.suggestedCorrection ? `<div><b>Suggestion:</b> ${esc(f.suggestedCorrection)}</div>` : ''}
         <div class="src">Source: ${esc(f.sourceReference)} · ${f.origin === 'ai' ? 'AI' : f.origin === 'rules+ai' ? 'Rules + AI' : 'Rule'} · ${(f.confidence * 100).toFixed(0)}%</div>
-        ${target && f.affectedContent && f.suggestedCorrection && f.suggestedCorrection.length < 200 ? `<div class="row"><button class="b" data-fix="${i}">Apply suggestion</button><button class="b" data-dismiss="${i}">Dismiss</button></div>` : ''}
+        ${target && f.affectedContent && f.suggestedCorrection && f.suggestedCorrection.length < 200 ? `<div class="row"><button class="b p" data-fix="${i}">Apply</button><button class="b" data-edit="${i}">Edit</button><button class="b" data-dismiss="${i}">Dismiss</button></div>
+          <div class="ed" id="ed${i}" style="display:none"><textarea class="edt" id="edt${i}">${esc(f.suggestedCorrection)}</textarea>
+          <div class="row"><button class="b p" data-fixed="${i}">Apply my edit</button><button class="b" data-cancel="${i}">Cancel</button></div></div>` : ''}
       </div>`).join('');
     show(`
       <div class="score"><div class="ring ${score.riskCategory}">${score.overallScore}</div>
@@ -181,13 +187,25 @@
         <p class="muted">${esc(meta.retrieval)} · ${meta.chunks} chunks indexed · ${meta.provider || 'rules only'} · ${meta.ms} ms</p>
       </details>`);
 
-    shadow.querySelectorAll('[data-fix]').forEach(b => b.onclick = () => {
-      const f = findings[+b.dataset.fix];
+    const applyFix = (i, replacement, btn) => {
+      const f = findings[i];
       const current = readText(target);
       const idx = current.toLowerCase().indexOf(f.affectedContent.toLowerCase());
-      if (idx < 0) return;
-      writeText(target, current.slice(0, idx) + f.suggestedCorrection + current.slice(idx + f.affectedContent.length));
-      b.closest('.f').style.opacity = .45; b.parentElement.remove();
+      if (idx < 0) { btn.textContent = 'Text changed, re-check'; return; }
+      writeText(target, current.slice(0, idx) + replacement + current.slice(idx + f.affectedContent.length));
+      const card = btn.closest('.f'); card.style.opacity = .45;
+      card.querySelectorAll('.row,.ed').forEach(n => n.remove());
+    };
+    shadow.querySelectorAll('[data-fix]').forEach(b => b.onclick = () => applyFix(+b.dataset.fix, findings[+b.dataset.fix].suggestedCorrection, b));
+    shadow.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
+      const i = b.dataset.edit; $('ed' + i).style.display = 'block'; b.parentElement.style.display = 'none';
+      const t = $('edt' + i); t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+    });
+    shadow.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => {
+      const i = b.dataset.cancel; $('ed' + i).style.display = 'none'; shadow.querySelector(`[data-edit="${i}"]`).parentElement.style.display = 'flex';
+    });
+    shadow.querySelectorAll('[data-fixed]').forEach(b => b.onclick = () => {
+      const v = $('edt' + b.dataset.fixed).value.trim(); if (v) applyFix(+b.dataset.fixed, v, b);
     });
     shadow.querySelectorAll('[data-dismiss]').forEach(b => b.onclick = () => b.closest('.f').remove());
     $('recheck').onclick = () => check(target ? readText(target) : lastText);
