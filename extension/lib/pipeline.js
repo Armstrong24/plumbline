@@ -130,7 +130,7 @@ export async function runAudit({ text, platform, guidelines, settings, cache }) 
   const retrieved = retrieve(chunks, queries, { vectors, k: settings.topK || 8, platform });
 
   let aiFindings = [], provider = null, aiError = null;
-  if (settings.groqKey || settings.geminiKey) {
+  if (settings.groqKey || settings.geminiKey || settings.backendToken) {
     try {
       const res = await chat(settings, auditPrompt(text, platform, contextBlock(retrieved)));
       provider = res.provider;

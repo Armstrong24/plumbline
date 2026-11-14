@@ -80,7 +80,7 @@ const handlers = {
   getSettings, getGuidelines,
   async status() {
     const [s, g, meta] = await Promise.all([getSettings(), getGuidelines(), store.get('guidelinesMeta')]);
-    return { hasGroq: !!s.groqKey, hasGemini: !!s.geminiKey, guidelines: g ? { version: g.version, ...counts(g) } : null, meta, user: s.backendUser };
+    return { hasGroq: !!s.groqKey, hasBackendAI: !!s.backendToken, hasGemini: !!s.geminiKey, guidelines: g ? { version: g.version, ...counts(g) } : null, meta, user: s.backendUser };
   },
   async saveSettings(patch) {
     const s = await getSettings();
@@ -118,7 +118,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 });
 
 // Right-click "Check with Plumbline" on any selected text, on any site
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
+  // Zero-setup start: ship with sample brand rules so the live check works before any sign-in or key.
+  if (!(await getGuidelines())) {
+    try { await store.set('guidelines', await (await fetch(chrome.runtime.getURL('sample-guidelines.json'))).json()); } catch {}
+  }
   chrome.contextMenus.create({ id: 'plumbline-check', title: 'Check with Plumbline', contexts: ['selection', 'editable'] });
   chrome.runtime.openOptionsPage();
 });

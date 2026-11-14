@@ -47,13 +47,30 @@ async function geminiChat({ key, model, system, user, temperature = 0.1, maxToke
   return (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
 }
 
+// Uses the team's Plumbline backend AI proxy (Groq key stays server-side), so users only need to sign in.
+async function plumblineChat({ backendUrl, token, system, user, temperature = 0.1, maxTokens = 1200, json = true }) {
+  const res = await fetch(`${backendUrl.replace(/\/$/, '')}/api/ai/chat/completions`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      temperature, max_tokens: maxTokens, ...(json ? { response_format: { type: 'json_object' } } : {})
+    })
+  });
+  if (res.status === 429) throw new RateLimitError('plumbline', 5);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`Plumbline backend: ${data?.detail || res.statusText}`);
+  return data.choices?.[0]?.message?.content || '';
+}
+
 /** Try Groq, wait briefly on a short 429, then fall back to Gemini. */
 export async function chat(settings, prompt) {
   const errors = [];
   const providers = [];
   if (settings.groqKey) providers.push(['groq', () => groqChat({ key: settings.groqKey, model: settings.groqModel || 'openai/gpt-oss-20b', ...prompt })]);
   if (settings.geminiKey) providers.push(['gemini', () => geminiChat({ key: settings.geminiKey, model: settings.geminiModel || 'gemini-3.5-flash-lite', ...prompt })]);
-  if (!providers.length) throw new Error('No API key set. Add a free Groq or Gemini key in the extension options.');
+  if (settings.backendToken) providers.push(['plumbline', () => plumblineChat({ backendUrl: settings.backendUrl, token: settings.backendToken, ...prompt })]);
+  if (!providers.length) throw new Error('No API key set. Sign in to Plumbline or add a free Groq/Gemini key in the extension options.');
 
   for (const [name, call] of providers) {
     for (let attempt = 0; attempt < 2; attempt++) {
