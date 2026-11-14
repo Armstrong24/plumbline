@@ -79,7 +79,7 @@
       textarea{width:100%;min-height:110px;border:1px solid #d1d5db;border-radius:8px;padding:8px;font-size:13px}
       .err{color:#b91c1c;font-size:12px;margin-top:6px}
     </style>
-    <button class="pill" id="pill"><span class="dot" id="dot"></span>Plumbline check</button>
+    <button class="pill" id="pill"><span class="dot" id="dot"></span><span id="plabel">Plumbline check</span></button>
     <div class="panel" id="panel"><header><b>Plumbline · ${platform}</b><button id="close">×</button></header><div class="body" id="body"></div></div>`;
 
   const $ = id => shadow.getElementById(id);
@@ -104,6 +104,39 @@
   }, true);
   window.addEventListener('scroll', () => target && document.contains(target) && placePill(target), true);
   window.addEventListener('resize', () => target && placePill(target));
+
+
+  // ---------- live mode: user types in the app's own composer, suggestions appear by themselves ----------
+  const AI_PAUSE_MS = 2500, AI_MIN_GAP_MS = 10000, MIN_CHARS = 25;
+  let rulesTimer = null, aiTimer = null, lastAiAt = 0, lastAiText = '';
+  const COLORS = { high: '#dc2626', medium: '#d97706', low: '#16a34a' };
+  function setPill(label, risk) {
+    $('plabel').textContent = label;
+    $('dot').style.background = COLORS[risk] || '#9ca3af';
+  }
+  document.addEventListener('input', e => {
+    const el = e.composedPath?.()[0] || e.target;
+    if (!isEditable(el)) return;
+    target = rootEditable(el);
+    placePill(target);
+    clearTimeout(rulesTimer); clearTimeout(aiTimer);
+    rulesTimer = setTimeout(async () => {
+      const text = readText(target).trim();
+      if (!text) return setPill('Plumbline check');
+      const r = await send('rules', { text, platform });
+      if (!r.ok || !r.data) return;
+      if (r.data.noGuidelines) return setPill('Sync guidelines');
+      const n = r.data.findings.length;
+      setPill(n ? `${n} issue${n > 1 ? 's' : ''}` : 'Looks good', r.data.score?.riskCategory);
+      if (!r.data.autoCheck || text.length < MIN_CHARS || text === lastAiText) return;
+      aiTimer = setTimeout(() => {
+        const now = Date.now();
+        if (now - lastAiAt < AI_MIN_GAP_MS) return;   // protect free-tier quota
+        lastAiAt = now; lastAiText = text;
+        check(text);
+      }, AI_PAUSE_MS);
+    }, 700);
+  }, true);
 
   $('pill').addEventListener('mousedown', e => e.preventDefault()); // keep editor focus
   $('pill').addEventListener('click', () => target && check(readText(target)));

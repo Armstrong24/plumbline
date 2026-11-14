@@ -7,6 +7,7 @@ async function load() {
   ['groqKey', 'geminiKey', 'backendUrl'].forEach(k => { $(k).value = s[k] || $(k).value; });
   $('groqModel').value = s.groqModel; $('geminiModel').value = s.geminiModel;
   $('disableEmbeddings').checked = !!s.disableEmbeddings;
+  $('autoCheck').checked = s.autoCheck !== false;
   $('loginBox').hidden = !!s.backendToken; $('loggedBox').hidden = !s.backendToken;
   if (s.backendUser) $('who').textContent = `${s.backendUser.name} (${s.backendUser.email})`;
   const g = (await send('getGuidelines')).data;
@@ -25,7 +26,8 @@ $('saveKeys').onclick = async () => {
   await send('saveSettings', {
     groqKey: $('groqKey').value.trim(), geminiKey: $('geminiKey').value.trim(),
     groqModel: $('groqModel').value, geminiModel: $('geminiModel').value,
-    disableEmbeddings: $('disableEmbeddings').checked
+    disableEmbeddings: $('disableEmbeddings').checked,
+    autoCheck: $('autoCheck').checked
   });
   msg('keysMsg', 'Saved.');
 };

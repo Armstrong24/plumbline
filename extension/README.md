@@ -1,6 +1,6 @@
 # Plumbline Brand Guard (Chrome extension)
 
-Brings Plumbline's brand audit into apps the backend can't publish to (Instagram personal, LinkedIn pages/comments, Threads replies, Reddit, WhatsApp Web, Discord, Telegram, Bluesky, Medium, Quora…). Right-click "Check with Plumbline" works on any site.
+Brings Plumbline's brand audit into apps the backend can't publish to (Instagram personal, LinkedIn pages/comments, Threads replies, Reddit, WhatsApp Web, Discord, Telegram, Bluesky, Medium, Quora…). Live mode: type in the app's own post box; the pill instantly shows rule issues and, after a 2.5 s pause, the grounded AI audit opens by itself with fixes you can apply. Runs on any website composer (WeChat Web etc. included); not desktop/mobile apps. Right-click "Check with Plumbline" works too.
 
 ## Pipeline (lib/)
 1. `rules.js` – exact port of `AIAuditEngine` (terminology + claim regex + same risk score).

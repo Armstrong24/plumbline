@@ -4,11 +4,26 @@
   "short_name": "Plumbline",
   "version": "1.0.0",
   "description": "Brings Plumbline's brand-governance audit (rules + RAG + LLM) into the apps Plumbline can't publish to yet.",
-  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
-  "action": { "default_popup": "ui/popup.html", "default_title": "Plumbline Brand Guard" },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "ui/popup.html",
+    "default_title": "Plumbline Brand Guard"
+  },
   "options_page": "ui/options.html",
-  "background": { "service_worker": "background.js", "type": "module" },
-  "permissions": ["storage", "contextMenus", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "activeTab",
+    "scripting"
+  ],
   "host_permissions": [
     "https://api.groq.com/*",
     "https://generativelanguage.googleapis.com/*",
@@ -18,27 +33,19 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.instagram.com/*",
-        "https://www.linkedin.com/*",
-        "https://www.threads.net/*",
-        "https://www.threads.com/*",
-        "https://www.reddit.com/*",
-        "https://web.whatsapp.com/*",
-        "https://discord.com/*",
-        "https://web.telegram.org/*",
-        "https://bsky.app/*",
-        "https://medium.com/*",
-        "https://www.quora.com/*",
-        "https://www.pinterest.com/*",
-        "https://www.tumblr.com/*",
-        "https://studio.youtube.com/*",
-        "https://www.youtube.com/*",
-        "https://x.com/*",
-        "https://www.facebook.com/*"
+        "<all_urls>"
       ],
-      "js": ["content/content.js"],
-      "css": ["content/content.css"],
-      "run_at": "document_idle"
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "run_at": "document_idle",
+      "exclude_matches": [
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*"
+      ]
     }
   ]
 }

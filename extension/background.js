@@ -1,11 +1,12 @@
 import { runAudit, runRewrite, runReply } from './lib/pipeline.js';
 import { testGroq, testGemini } from './lib/llm.js';
+import { auditDeterministic, calculateRiskScore } from './lib/rules.js';
 
 const DEFAULT_SETTINGS = {
   groqKey: '', groqModel: 'openai/gpt-oss-20b',
   geminiKey: '', geminiModel: 'gemini-3.5-flash-lite',
   backendUrl: 'http://localhost:8000', backendToken: '', backendUser: null,
-  topK: 8, disableEmbeddings: false, autoCheck: false
+  topK: 8, disableEmbeddings: false, autoCheck: true
 };
 
 const store = {
@@ -56,6 +57,13 @@ function counts(g) {
 
 // ---- message router ----
 const handlers = {
+  // Instant, free, local check used while the user types in the app's own composer.
+  async rules({ text, platform }) {
+    const [settings, guidelines] = await Promise.all([getSettings(), getGuidelines()]);
+    if (!guidelines) return { findings: [], score: null, autoCheck: settings.autoCheck, noGuidelines: true };
+    const findings = auditDeterministic(text, platform, guidelines);
+    return { findings, score: calculateRiskScore(findings), autoCheck: settings.autoCheck };
+  },
   async audit({ text, platform }) {
     const [settings, guidelines] = await Promise.all([getSettings(), getGuidelines()]);
     if (!guidelines) throw new Error('No brand guidelines loaded. Open the extension options to sync or import them.');
