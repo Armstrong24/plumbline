@@ -45,7 +45,11 @@ async function syncGuidelines() {
   if (!data.guidelines) throw new Error('This workspace has no brand guidelines yet. Add them in Plumbline → Brand Knowledge.');
   const local = (await getGuidelines()) || {};
   // keep any extension-only rulebook text the user pasted
-  const merged = { ...data.guidelines, rulebookText: local.rulebookText || data.guidelines.rulebookText || '' };
+  // fill tone rules for apps the web app has no setting for (the workspace's own rules always win)
+  const extra = (await (await fetch(chrome.runtime.getURL('sample-guidelines.json'))).json()).voice.platformRules;
+  const voice = { ...(data.guidelines.voice || {}) };
+  voice.platformRules = { ...extra, ...(voice.platformRules || {}) };
+  const merged = { ...data.guidelines, voice, rulebookText: local.rulebookText || data.guidelines.rulebookText || '' };
   await store.set('guidelines', merged);
   await store.set('guidelinesMeta', { source: 'backend', syncedAt: new Date().toISOString() });
   return { ok: true, version: merged.version, counts: counts(merged) };
