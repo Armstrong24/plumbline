@@ -5,7 +5,7 @@ Brings Plumbline's brand audit into apps the backend can't publish to (Instagram
 ## Pipeline (lib/)
 1. `rules.js` – exact port of `AIAuditEngine` (terminology + claim regex + same risk score).
 2. `rag.js` – guidelines → chunks (voice, platform rules, terminology, facts, pasted rulebook passages) → hybrid retrieval: local BM25 + Gemini embeddings, merged with Reciprocal Rank Fusion; platform rule always pinned.
-3. `llm.js` – Groq (`openai/gpt-oss-20b`) primary, Gemini (`gemini-2.5-flash-lite`) fallback on 429/errors, `gemini-embedding-001` for vectors.
+3. `llm.js` – Groq (`openai/gpt-oss-20b`) primary, Gemini (`gemini-3.5-flash-lite`) fallback on 429/errors, `gemini-embedding-001` for vectors.
 4. `pipeline.js` – grounded audit: LLM sees only top-k retrieved chunks, must cite chunk ids; findings whose quote isn't in the draft or with no valid citation are dropped; merged with rule findings and scored. Also `runRewrite` and `runReply`.
 Works with no key (rules + BM25 only).
 

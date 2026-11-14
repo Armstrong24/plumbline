@@ -3,7 +3,7 @@ import { testGroq, testGemini } from './lib/llm.js';
 
 const DEFAULT_SETTINGS = {
   groqKey: '', groqModel: 'openai/gpt-oss-20b',
-  geminiKey: '', geminiModel: 'gemini-2.5-flash-lite',
+  geminiKey: '', geminiModel: 'gemini-3.5-flash-lite',
   backendUrl: 'http://localhost:8000', backendToken: '', backendUser: null,
   topK: 8, disableEmbeddings: false, autoCheck: false
 };

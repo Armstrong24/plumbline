@@ -1,6 +1,6 @@
 // Free-tier model providers.
 //   Primary  : Groq  (openai/gpt-oss-20b or gpt-oss-120b) — free plan, 30 RPM / 1K RPD / 8K TPM per model
-//   Fallback : Google Gemini (gemini-2.5-flash-lite / gemini-3.1-flash-lite) — free tier
+//   Fallback : Google Gemini (gemini-3.5-flash-lite) — free tier
 //   Embeddings: Gemini gemini-embedding-001 — free tier
 // NOTE: llama-3.3-70b-versatile is Enterprise-only on Groq now, so it is NOT a default here.
 
@@ -52,7 +52,7 @@ export async function chat(settings, prompt) {
   const errors = [];
   const providers = [];
   if (settings.groqKey) providers.push(['groq', () => groqChat({ key: settings.groqKey, model: settings.groqModel || 'openai/gpt-oss-20b', ...prompt })]);
-  if (settings.geminiKey) providers.push(['gemini', () => geminiChat({ key: settings.geminiKey, model: settings.geminiModel || 'gemini-2.5-flash-lite', ...prompt })]);
+  if (settings.geminiKey) providers.push(['gemini', () => geminiChat({ key: settings.geminiKey, model: settings.geminiModel || 'gemini-3.5-flash-lite', ...prompt })]);
   if (!providers.length) throw new Error('No API key set. Add a free Groq or Gemini key in the extension options.');
 
   for (const [name, call] of providers) {
